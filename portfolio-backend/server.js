@@ -1,7 +1,8 @@
-// server.js
 const express = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
+const projectRoutes = require('./routes/projectRoutes');
+
 
 // Load environment variables
 dotenv.config();
@@ -14,6 +15,10 @@ const app = express();
 
 // Middleware for parsing JSON requests
 app.use(express.json());
+
+// Use project routes
+app.use('/api/projects', projectRoutes);
+
 
 app.get('/', (req, res) => {
   res.send('Portfolio Backend API');
