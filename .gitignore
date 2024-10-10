@@ -1,5 +1,4 @@
-node_modules
+.idea/
+node_modules/
 .env
 package-lock.json
-.idea/
-portfolio-backend/.idea/
