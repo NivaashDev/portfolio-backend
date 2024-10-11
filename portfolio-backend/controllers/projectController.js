@@ -1,4 +1,5 @@
 const Project = require('../models/projectModel');
+const { projectSchema } = require('../validation/projectValidation'); // Import the Joi validation schema
 
 const getProjects = async (req, res) => {
   try {
@@ -9,12 +10,31 @@ const getProjects = async (req, res) => {
   }
 };
 
-const addProject = async (req, res) => {
-  const { title, description, technologies, githubLink, imageUrl } = req.body;
 
-  if (!title || !description || !technologies) {
-    return res.status(400).json({ message: 'Please provide all required fields' });
+const getProjectById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const project = await Project.findById(id);
+    
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+    
+    res.status(200).json(project);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching project' });
   }
+};  
+
+const addProject = async (req, res) => {
+
+  const { error } = projectSchema.validate(req.body);
+
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
+
+  const { title, description, technologies, githubLink, imageUrl, deployedLink } = req.body;
 
   try {
     const project = new Project({
@@ -23,6 +43,7 @@ const addProject = async (req, res) => {
       technologies,
       githubLink,
       imageUrl,
+      deployedLink,
     });
 
     const savedProject = await project.save();
@@ -32,13 +53,34 @@ const addProject = async (req, res) => {
   }
 };
 
+
 const updateProject = async (req, res) => {
+
+  const { error } = projectSchema.validate(req.body);
+
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
+
+  const { title, description, technologies, githubLink, imageUrl, deployedLink } = req.body;
   const { id } = req.params;
 
   try {
-    const updatedProject = await Project.findByIdAndUpdate(id, req.body, {
-      new: true, // Return the updated project after the update
-    });
+    const updatedProject = await Project.findByIdAndUpdate(
+      id,
+      {
+        title,
+        description,
+        technologies,
+        githubLink,
+        imageUrl,
+        deployedLink,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!updatedProject) {
       return res.status(404).json({ message: 'Project not found' });
@@ -49,6 +91,7 @@ const updateProject = async (req, res) => {
     res.status(500).json({ message: 'Error updating project' });
   }
 };
+
 
 const deleteProject = async (req, res) => {
   const { id } = req.params;
